@@ -198,6 +198,16 @@ impl CPU {
                     self.sta(&opcode.mode);
                 }
 
+                // ADC
+                0x69 | 0x65 | 0x75 | 0x6d | 0x7d | 0x79 | 0x61 | 0x71 => {
+                    self.adc(&opcode.mode);
+                }
+
+                // SBC
+                0xe9 | 0xe5 | 0xf5 | 0xed | 0xfd | 0xf9 | 0xe1 | 0xf1 => {
+                    self.sbc(&opcode.mode);
+                }
+
                 0xAA => self.tax(),
                 0xe8 => self.inx(),
                 0x00 => return,
@@ -225,6 +235,40 @@ impl CPU {
     fn set_register_a(&mut self, value: u8) {
         self.register_a = value;
         self.update_zero_and_negative_flags(self.register_a);
+    }
+
+    // ignoring decimal mode
+    fn add_to_register_a(&mut self, data: u8) {
+        let sum = self.register_a as u16 + data as u16 +
+                  (if self.status.contains(CpuFlags::CARRY) {1} else {0}) as u16;
+
+        let carry = sum > 0xff;
+        if carry {
+            self.status.insert(CpuFlags::CARRY);
+        } else {
+            self.status.remove(CpuFlags::CARRY);
+        }
+
+        let result = sum as u8;
+        if (data ^ result) & (result ^ self.register_a) & 0x80 != 0 {
+            self.status.insert(CpuFlags::OVERFLOW);
+        } else {
+            self.status.remove(CpuFlags::OVERFLOW);
+        }
+
+        self.set_register_a(result);
+    }
+
+    fn adc(&mut self, mode: &AddressingMode) {
+        let addr = self.get_operand_address(mode);
+        let value = self.mem_read(addr);
+        self.add_to_register_a(value);
+    }
+
+    fn sbc(&mut self, mode: &AddressingMode) {
+        let addr = self.get_operand_address(&mode);
+        let data = self.mem_read(addr);
+        self.add_to_register_a(((data as i8).wrapping_neg().wrapping_sub(1)) as u8);
     }
 
     fn stack_pop(&mut self) -> u8 {
