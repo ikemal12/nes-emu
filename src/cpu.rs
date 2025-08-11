@@ -223,6 +223,30 @@ impl CPU {
                     self.ora(&opcode.mode);
                 }
 
+                // ASL
+                0x0a => self.asl_accumulator(),
+                0x06 | 0x16 | 0x0e | 0x1e => {
+                    self.asl(&opcode.mode);
+                }
+
+                // LSR
+                0x4a => self.lsr_accumulator(),
+                0x46 | 0x56 | 0x4e | 0x5e => {
+                    self.lsr(&opcode.mode);
+                }
+
+                // ROL
+                0x2a => self.rol_accumulator(),
+                0x26 | 0x36 | 0x2e | 0x3e => {
+                    self.rol(&opcode.mode);
+                }
+
+                // ROR
+                0x6a => self.ror_accumulator(),
+                0x66 | 0x76 | 0x6e | 0x7e => {
+                    self.ror(&opcode.mode);
+                }
+
                 0xAA => self.tax(),
                 0xe8 => self.inx(),
                 0x00 => return,
@@ -335,6 +359,126 @@ impl CPU {
         let addr = self.get_operand_address(mode);
         let data = self.mem_read(addr);
         self.set_register_a(data ^ self.register_a);
+    }
+
+    fn asl_accumulator(&mut self) {
+        let mut data = self.register_a;
+        if data >> 7 == 1 {
+            self.set_carry_flag();
+        } else {
+            self.clear_carry_flag();
+        }
+        data = data << 1;
+        self.set_register_a(data);
+    }
+
+    fn asl(&mut self, mode: &AddressingMode) -> u8 {
+        let addr = self.get_operand_address(mode);
+        let mut data = self.mem_read(addr);
+        if data >> 7 == 1 {
+            self.set_carry_flag();
+        } else {
+            self.clear_carry_flag();
+        }
+        data = data << 1;
+        self.mem_write(addr, data);
+        self.update_zero_and_negative_flags(data);
+        data
+    }
+
+    fn lsr_accumulator(&mut self) {
+        let mut data = self.register_a;
+        if data & 1 == 1 {
+            self.set_carry_flag();
+        } else {
+            self.clear_carry_flag();
+        }
+        data = data >> 1;
+        self.set_register_a(data);
+    }
+
+    fn lsr(&mut self, mode: &AddressingMode) -> u8 {
+        let addr = self.get_operand_address(mode);
+        let mut data = self.mem_read(addr);
+        if data & 1 == 1 {
+            self.set_carry_flag();
+        } else {
+            self.clear_carry_flag();
+        }
+        data = data >> 1;
+        self.mem_write(addr, data);
+        self.update_zero_and_negative_flags(data);
+        data
+    }
+
+    fn rol_accumulator(&mut self) {
+        let mut data = self.register_a;
+        let old_carry = self.status.contains(CpuFlags::CARRY);
+        
+        if data >> 7 == 1 {
+            self.set_carry_flag();
+        } else {
+            self.clear_carry_flag();
+        }
+        data = data << 1;
+        if old_carry {
+            data = data | 1;
+        }
+        self.set_register_a(data);
+    }
+
+    fn rol(&mut self, mode: &AddressingMode) {
+        let addr = self.get_operand_address(mode);
+        let mut data = self.mem_read(addr);
+        let old_carry = self.status.contains(CpuFlags::CARRY);
+
+        if data >> 7 == 1 {
+            self.set_carry_flag();
+        } else {
+            self.clear_carry_flag();
+        }
+        data = data << 1;
+        if old_carry {
+            data = data | 1;
+        }
+        self.mem_write(addr, data);
+        self.update_zero_and_negative_flags(data);
+        data
+    }
+
+    fn ror_accumulator(&mut self) {
+        let mut data = self.register_a;
+        let old_carry = self.status.contains(CpuFlags::CARRY);
+
+        if data & 1 == 1 {
+            self.set_carry_flag();
+        } else {
+            self.clear_carry_flag();
+        }
+        data = data >> 1;
+        if old_carry {
+            data = data | 0b10000000;
+        }
+        self.set_register_a(data);
+    }
+
+    fn ror(&mut self, mode: &AddressingMode) -> u8 {
+        let addr = self.get_operand_address(mode);
+        let mut data = self.mem_read(addr);
+        let old_carry = self.status.contains(CpuFlags::CARRY);
+
+        if data & 1 == 1 {
+            self.set_carry_flag();
+        } else {
+            self.clear_carry_flag();
+        }
+        data = data >> 1;
+        if old_carry {
+            data = data | 0b10000000;
+        }
+        self.mem_write(addr, data);
+        self.update_zero_and_negative_flags(data);
+        data
     }
 
     fn update_zero_and_negative_flags(&mut self, result:u8) {
