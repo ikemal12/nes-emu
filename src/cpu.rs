@@ -175,6 +175,30 @@ impl CPU {
         self.run()
     }
 
+    fn compare(&mut self, mode: &AddressingMode, compare_with: u8) {
+        let addr = self.get_operand_address(mode);
+        let data = self.mem_read(addr);
+
+        if data <= compare_with {
+            self.status.insert(CpuFlags::CARRY);
+        } else {
+            self.status.remove(CpuFlags::CARRY);
+        }
+        self.update_zero_and_negative_flags(compare_with.wrapping_sub(data));
+    }
+
+    fn cmp(&mut self, mode: &AddressingMode) {
+        self.compare(mode, self.register_a);
+    }
+
+    fn cpx(&mut self, mode: &AddressingMode) {
+        self.compare(mode, self.register_x);
+    }
+
+    fn cpy(&mut self, mode: &AddressingMode) {
+        self.compare(mode, self.register_y);
+    }
+
     pub fn run(&mut self) {
         let ref opcodes: HashMap<u8, &'static opcodes::OpCode> = *opcodes::OPCODES_MAP;
 
@@ -254,6 +278,21 @@ impl CPU {
                 // DEC
                 0xc6 | 0xd6 | 0xce | 0xde => {
                     self.dec(&opcode.mode);
+                }
+
+                // CMP
+                0xc9 | 0xc5 | 0xd5 | 0xcd | 0xdd | 0xd9 | 0xc1 | 0xd1 => {
+                    self.compare(&opcode.mode, self.register_a);
+                }
+
+                // CPX
+                0xe0 | 0xe4 | 0xec => {
+                    self.compare(&opcode.mode, self.register_x);
+                }
+
+                // CPY
+                0xc0 | 0xc4 | 0xcc => {
+                    self.compare(&opcode.mode, self.register_y);
                 }
 
                 0xAA => self.tax(),
