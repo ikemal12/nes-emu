@@ -199,6 +199,18 @@ impl CPU {
         self.compare(mode, self.register_y);
     }
 
+    fn branch(&mut self, condition: bool) {
+        if condition {
+            let jump: i8 = self.mem_read(self.program_counter) as i8;
+            let jump_addr = self 
+                .program_counter
+                .wrapping_add(1)
+                .wrapping_add(jump as u16);
+
+            self.program_counter = jump_addr;
+        }
+    }
+
     pub fn run(&mut self) {
         let ref opcodes: HashMap<u8, &'static opcodes::OpCode> = *opcodes::OPCODES_MAP;
 
@@ -293,6 +305,46 @@ impl CPU {
                 // CPY
                 0xc0 | 0xc4 | 0xcc => {
                     self.compare(&opcode.mode, self.register_y);
+                }
+
+                // BEQ
+                0xf0 => {
+                    self.branch(self.status.contains(CpuFlags::ZERO));
+                }
+
+                // BNE
+                0xd0 => {
+                    self.branch(!self.status.contains(CpuFlags::ZERO));
+                }
+
+                // BCC
+                0x90 => {
+                    self.branch(!self.status.contains(CpuFlags::CARRY));
+                }
+
+                // BCS
+                0xb0 => {
+                    self.branch(self.status.contains(CpuFlags::CARRY));
+                }
+
+                // BMI 
+                0x30 => {
+                    self.branch(self.status.contains(CpuFlags::NEGATIVE));
+                }
+
+                // BPL
+                0x10 => {
+                    self.branch(!self.status.contains(CpuFlags::NEGATIVE));
+                }
+
+                // BVC
+                0x50 => {
+                    self.branch(!self.status.contains(CpuFlags::OVERFLOW));
+                }
+
+                // BVS
+                0x70 => {
+                    self.branch(self.status.contains(CpuFlags::OVERFLOW));
                 }
 
                 0xAA => self.tax(),
