@@ -152,6 +152,27 @@ lazy_static! {
         OpCode::new(0x70, "BVS", 2, 2 /*(+1 if branch succeeds +2 if to a new page)*/, AddressingMode::NoneAddressing),
         OpCode::new(0x90, "BCC", 2, 2 /*(+1 if branch succeeds +2 if to a new page)*/, AddressingMode::NoneAddressing),
         OpCode::new(0xb0, "BCS", 2, 2 /*(+1 if branch succeeds +2 if to a new page)*/, AddressingMode::NoneAddressing),
+
+        OpCode::new(0xa2, "LDX", 2, 2, AddressingMode::Immediate),
+        OpCode::new(0xa6, "LDX", 2, 3, AddressingMode::ZeroPage),
+        OpCode::new(0xb6, "LDX", 2, 4, AddressingMode::ZeroPage_Y),
+        OpCode::new(0xae, "LDX", 3, 4, AddressingMode::Absolute),
+        OpCode::new(0xbe, "LDX", 3, 4/*+1 if page crossed*/, AddressingMode::Absolute_Y),
+
+        OpCode::new(0xa0, "LDY", 2, 2, AddressingMode::Immediate),
+        OpCode::new(0xa4, "LDY", 2, 3, AddressingMode::ZeroPage),
+        OpCode::new(0xb4, "LDY", 2, 4, AddressingMode::ZeroPage_X),
+        OpCode::new(0xac, "LDY", 3, 4, AddressingMode::Absolute),
+        OpCode::new(0xbc, "LDY", 3, 4/*+1 if page crossed*/, AddressingMode::Absolute_X),
+
+        OpCode::new(0x86, "STX", 2, 3, AddressingMode::ZeroPage),
+        OpCode::new(0x96, "STX", 2, 4, AddressingMode::ZeroPage_Y),
+        OpCode::new(0x8e, "STX", 3, 4, AddressingMode::Absolute),
+
+        OpCode::new(0x84, "STY", 2, 3, AddressingMode::ZeroPage),
+        OpCode::new(0x94, "STY", 2, 4, AddressingMode::ZeroPage_X),
+        OpCode::new(0x8c, "STY", 3, 4, AddressingMode::Absolute),
+
     ];
 
     pub static ref OPCODES_MAP: HashMap<u8, &'static OpCode> = {
