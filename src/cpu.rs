@@ -373,6 +373,13 @@ impl CPU {
                 0x98 => self.tya(),
                 0xba => self.tsx(),
                 0x9a => self.txs(),
+                0x18 => self.clc(),
+                0x38 => self.sec(),
+                0x58 => self.cli(),
+                0x78 => self.sei(),
+                0xd8 => self.cld(),
+                0xf8 => self.sed(),
+                0xb8 => self.clv(),
                 0xe8 => self.inx(),
                 0xc8 => self.iny(),
                 0xca => self.dex(),
@@ -484,6 +491,34 @@ impl CPU {
         let hi = self.stack_pop() as u16;
         hi << 8 | lo;
     }
+
+    fn clc(&mut self) {
+        self.status.remove(CpuFlags::CARRY);
+    }
+
+    fn sec(&mut self) {
+        self.status.insert(CpuFlags::CARRY);
+    }
+
+    fn cli(&mut self) {
+        self.status.remove(CpuFlags::INTERRUPT_DISABLE);
+    }
+
+    fn sei(&mut self) {
+        self.status.insert(CpuFlags::INTERRUPT_DISABLE);
+    }
+
+    fn cld(&mut self) {
+        self.status.remove(CpuFlags::DECIMAL_MODE);
+    }
+
+    fn sed(&mut self) {
+        self.status.insert(CpuFlags::DECIMAL_MODE);
+    }
+
+    fn clv(&mut self) {
+        self.status.remove(CpuFlags::OVERFLOW);
+    }   
 
     fn tax(&mut self) {
         self.register_x = self.register_a;
