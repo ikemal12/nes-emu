@@ -384,6 +384,10 @@ impl CPU {
                 0xc8 => self.iny(),
                 0xca => self.dex(),
                 0x88 => self.dey(),
+                0x48 => self.pha(),
+                0x68 => self.pla(),
+                0x08 => self.php(),
+                0x28 => self.plp(),
                 0x00 => return,
                 _ => todo!(),
             }
@@ -723,6 +727,28 @@ impl CPU {
         self.mem_write(addr, data);
         self.update_zero_and_negative_flags(data);
         data
+    }
+
+    fn pha(&mut self) {
+        self.stack_push(self.register_a);
+    }
+
+    fn pla(&mut self) {
+        let data = self.stack_pop();
+        self.set_register_a(data);
+    }
+
+    fn php(&mut self) {
+        let mut flags = self.status;
+        flags.insert(CpuFlags::BREAK);
+        flags.insert(CpuFlags::BREAK2);
+        self.stack_push(flags.bits());
+    }
+
+    fn plp(&mut self) {
+        self.status = CpuFlags::from_bits_truncate(self.stack_pop());
+        self.status.remove(CpuFlags::BREAK);
+        self.status.remove(CpuFlags::BREAK2);
     }
 
     fn update_zero_and_negative_flags(&mut self, result:u8) {
