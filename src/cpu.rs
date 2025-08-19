@@ -388,6 +388,10 @@ impl CPU {
                 0x68 => self.pla(),
                 0x08 => self.php(),
                 0x28 => self.plp(),
+                0x4c => self.jmp_absolute(),
+                0x6c => self.jmp_indirect(),
+                0x20 => self.jsr(),
+                0x60 => self.rts(),
                 0x00 => return,
                 _ => todo!(),
             }
@@ -475,7 +479,7 @@ impl CPU {
 
     fn stack_pop(&mut self) -> u8 {
         self.stack_pointer = self.stack_pointer.wrapping_add(1);
-        self.mem_read((STACK as u16) + self.stack_pointer as u16);
+        self.mem_read((STACK as u16) + self.stack_pointer as u16)
     }
 
     fn stack_push(&mut self, data: u8) {
@@ -493,7 +497,7 @@ impl CPU {
     fn stack_pop_u16(&mut self) -> u16 {
         let lo = self.stack_pop() as u16;
         let hi = self.stack_pop() as u16;
-        hi << 8 | lo;
+        hi << 8 | lo
     }
 
     fn clc(&mut self) {
@@ -749,6 +753,33 @@ impl CPU {
         self.status = CpuFlags::from_bits_truncate(self.stack_pop());
         self.status.remove(CpuFlags::BREAK);
         self.status.remove(CpuFlags::BREAK2);
+    }
+
+    fn jmp_absolute(&mut self) {
+        let addr = self.mem_read_u16(self.program_counter);
+        self.program_counter = addr;
+    }
+
+    fn jmp_indirect(&mut self) {
+        let addr = self.mem_read_u16(self.program_counter);
+        let indirect_ref = if addr & 0x00FF == 0x00FF {
+            let lo = self.mem_read(addr);
+            let hi = self.mem_read(addr & 0xFF00);
+            (hi as u16) << 8 | (lo as u16)
+        } else {
+            self.mem_read_u16(addr)
+        };
+        self.program_counter = indirect_ref;
+    }
+
+    fn jsr(&mut self) {
+        self.stack_push_u16(self.program_counter + 2 - 1);
+        let addr = self.mem_read_u16(self.program_counter);
+        self.program_counter = addr;
+    }
+
+    fn rts(&mut self) {
+        self.program_counter = self.stack_pop_u16() + 1;
     }
 
     fn update_zero_and_negative_flags(&mut self, result:u8) {
