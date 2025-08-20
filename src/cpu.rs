@@ -187,6 +187,30 @@ impl CPU {
         self.update_zero_and_negative_flags(compare_with.wrapping_sub(data));
     }
 
+    fn bit(&mut self, mode: &AddressingMode) {
+        let addr = self.get_operand_address(mode);
+        let data = self.mem_read(addr);
+        let res = self.register_a & data;
+
+        if res == 0 {
+            self.status.insert(CpuFlags::ZERO);
+        } else {
+            self.status.remove(CpuFlags::ZERO);
+        }
+
+        if data & 0b1000_0000 != 0 {
+            self.status.insert(CpuFlags::NEGATIVE);
+        } else {
+            self.status.remove(CpuFlags::NEGATIVE);
+        }
+
+        if data & 0b0100_0000 != 0 {
+            self.status.insert(CpuFlags::OVERFLOW);
+        } else {
+            self.status.remove(CpuFlags::OVERFLOW);
+        }
+    }
+
     fn cmp(&mut self, mode: &AddressingMode) {
         self.compare(mode, self.register_a);
     }
@@ -367,6 +391,11 @@ impl CPU {
                     self.sty(&opcode.mode);
                 }
 
+                // BIT
+                0x24 | 0x2c => {
+                    self.bit(&opcode.mode);
+                }
+
                 0xAA => self.tax(),
                 0xa8 => self.tay(),
                 0x8a => self.txa(),
@@ -392,6 +421,7 @@ impl CPU {
                 0x6c => self.jmp_indirect(),
                 0x20 => self.jsr(),
                 0x60 => self.rts(),
+                0xea => {},
                 0x00 => return,
                 _ => todo!(),
             }
