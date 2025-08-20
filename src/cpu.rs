@@ -421,6 +421,7 @@ impl CPU {
                 0x6c => self.jmp_indirect(),
                 0x20 => self.jsr(),
                 0x60 => self.rts(),
+                0x40 => self.rti(),
                 0xea => {},
                 0x00 => return,
                 _ => todo!(),
@@ -810,6 +811,13 @@ impl CPU {
 
     fn rts(&mut self) {
         self.program_counter = self.stack_pop_u16() + 1;
+    }
+
+    fn rti(&mut self) {
+        self.status = CpuFlags::from_bits_truncate(self.stack_pop());
+        self.status.remove(CpuFlags::BREAK);
+        self.status.remove(CpuFlags::BREAK2);
+        self.program_counter = self.stack_pop_u16();
     }
 
     fn update_zero_and_negative_flags(&mut self, result:u8) {
