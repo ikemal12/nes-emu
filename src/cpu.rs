@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use crate::opcodes;
+use bitflags::bitflags;
 
 bitflags! {
     pub struct CpuFlags: u8 {
@@ -42,7 +43,7 @@ pub enum AddressingMode {
     NoneAddressing,
 }
 
-trait Mem {
+pub trait Mem {
     fn mem_read(&self, addr:u16) -> u8;
 
     fn mem_write(&mut self, addr:u16, data:u8);
@@ -139,11 +140,11 @@ impl CPU {
         }
     }
 
-    fn mem_read(&self, addr:u16) -> u8 {
+    pub fn mem_read(&self, addr:u16) -> u8 {
         self.memory[addr as usize]
     }
 
-    fn mem_write(&mut self, addr:u16, data:u8) {
+    pub fn mem_write(&mut self, addr:u16, data:u8) {
         self.memory[addr as usize] = data;
     }
 
@@ -718,7 +719,7 @@ impl CPU {
         self.set_register_a(data);
     }
 
-    fn rol(&mut self, mode: &AddressingMode) {
+    fn rol(&mut self, mode: &AddressingMode) -> u8{
         let addr = self.get_operand_address(mode);
         let mut data = self.mem_read(addr);
         let old_carry = self.status.contains(CpuFlags::CARRY);
