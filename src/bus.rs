@@ -1,4 +1,5 @@
 use crate::cpu::Mem;
+use crate::cartridge::Rom;
 
 const RAM: u16 = 0x0000;
 const RAM_MIRRORS_END: u16 = 0x1FFF;
@@ -35,7 +36,7 @@ impl Mem for Bus {
                 self.cpu_vram[mirror_down_addr as usize]
             }
             PPU_REGISTERS ..=PPU_REGISTERS_MIRRORS_END => {
-                let mirror_down_addr = addr & 0b00100000_00000111;
+                let _mirror_down_addr = addr & 0b00100000_00000111;
                 todo!("PPU is not supported yet")
             }
             0x8000..=0xFFFF => self.read_prg_rom(addr),

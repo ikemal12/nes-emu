@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use crate::opcodes;
 use bitflags::bitflags;
+use crate::bus::Bus;
 
 bitflags! {
     pub struct CpuFlags: u8 {
@@ -49,7 +50,7 @@ pub trait Mem {
     fn mem_write(&mut self, addr:u16, data:u8);
 
     // Little-Endian addressing
-    fn mem_read_u16(&mut self, pos:u16) -> u16 {
+    fn mem_read_u16(&self, pos:u16) -> u16 {
         let lo = self.mem_read(pos) as u16;
         let hi = self.mem_read(pos + 1) as u16;
         (hi << 8) | (lo as u16)
@@ -82,7 +83,7 @@ impl Mem for CPU {
 }
 
 impl CPU {
-    pub fn new() -> Self {
+    pub fn new(bus: Bus) -> Self {
         CPU {
             register_a: 0,
             register_x: 0,
@@ -90,7 +91,7 @@ impl CPU {
             status: CpuFlags::from_bits_truncate(0b100100),
             stack_pointer: STACK_RESET,
             program_counter: 0,
-            bus: Bus::new(),
+            bus: bus,
         }
     }
 
@@ -146,14 +147,6 @@ impl CPU {
                 panic!("mode {:?} is not supported", mode);
             }
         }
-    }
-
-    pub fn mem_read(&self, addr:u16) -> u8 {
-        self.memory[addr as usize]
-    }
-
-    pub fn mem_write(&mut self, addr:u16, data:u8) {
-        self.memory[addr as usize] = data;
     }
 
     pub fn reset(&mut self) {
