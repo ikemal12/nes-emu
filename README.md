@@ -2,10 +2,10 @@
 
 ## Roadmap
 
-- [ ] CPU (includes instruction set for the NES's 2A03 chip and main program loop) <- **currently working on**
-- [ ] BUS
-- [ ] ROM
-- [ ] Picture Processing Unit (PPU)
+- [x] CPU (includes instruction set for the NES's 2A03 chip and main program loop)
+- [x] BUS
+- [x] ROM
+- [ ] Picture Processing Unit (PPU) <- **currently working on**
 - [ ] GamePad
 - [ ] APU
 
