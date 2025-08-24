@@ -435,6 +435,10 @@ impl CPU {
                 0x60 => self.rts(),
                 0x40 => self.rti(),
                 0xea => {},
+                0x04 | 0x44 | 0x64 | 0x0c | 0x14 | 0x34 | 0x54 | 0x74 | 0xd4 | 0xf4 |
+                0x1a | 0x3a | 0x5a | 0x7a | 0xda | 0xfa | 0x80 | 0x1c | 0x3c | 0x5c |
+                0x7c | 0xdc | 0xfc => {},
+                0xa3 | 0xa7 | 0xab | 0xaf | 0xb3 | 0xb7 | 0xbf => self.lax(&opcode.mode),
                 0x00 => return,
                 _ => todo!(),
             }
@@ -464,6 +468,14 @@ impl CPU {
         let data = self.mem_read(addr);
         self.register_y = data;
         self.update_zero_and_negative_flags(self.register_y);
+    }
+
+    fn lax(&mut self, mode: &AddressingMode) {
+        let addr = self.get_operand_address(mode);
+        let value = self.mem_read(addr);
+        self.register_a = value;
+        self.register_x = value;
+        self.update_zero_and_negative_flags(self.register_a);
     }
 
     fn sta(&mut self, mode: &AddressingMode) {
